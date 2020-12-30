@@ -2,7 +2,7 @@
  A Simple Space Shooter Game Made With N88 BASIC
 
 # About
-This is a game made out of N88-BASIC by me for a video (LINK VIDEO HERE)
+This is a game made out of N88-BASIC by me for a video (https://www.bilibili.com/video/bv19f4y1e7y6)
 
 basic.txt contains the program's code. (This is supposed to run in V2 mode)
 
