@@ -4,7 +4,7 @@
 # About
 This is a game made out of N88-BASIC by me for a video (LINK VIDEO HERE)
 
-basic.txt contains the program's code.
+basic.txt contains the program's code. (This is supposed to run in V2 mode)
 
 N88SpaceShooter.txt is the note by me while making the game (it is written in English and Chinese mixed together)
 
