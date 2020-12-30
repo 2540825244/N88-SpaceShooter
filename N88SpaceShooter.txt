@@ -1,0 +1,477 @@
+程序 (The {}'s are meant to change according to the line number of actual program):
+    主逻辑: 1
+        GOSUB {初始化}
+        GOSUB {定义变量}
+        GOSUB {标题界面逻辑}
+        END
+
+    初始化: 10
+        CLS 3
+        LOCATE 0,0,0
+        CONSOLE ,,,1
+        RETURN
+
+    定义变量:   20
+        X% = 0
+        Y% = 0
+        DX% = 0
+        DY% = 0
+        TX% = 0
+        TY% = 0
+        XA% = 0
+        YA% = 0
+        XB% = 0
+        YB% = 0
+        XC% = 0
+        YC% = 0
+        CX% = 0
+        CY% = 0
+        SEC% = 0
+        SEC1% = 0
+        K$ = ""
+        K1$ = ""
+        DIM GameWorldType(8,10)
+        DIM GameWorldData(8,10)
+        SCORE% = 0
+        TYPE% = 0
+        DATA% = 0
+        ENEMY! = 3
+        ASTEROID! = 5
+        RETURN
+
+    标题界面逻辑:   50
+        GOSUB {显示标题界面}
+        WHILE INKEY$ <> "w"
+        WEND
+        CLS 3
+        GameWorldType(4,0) = 1
+        GOSUB {初始化分数}
+        GOSUB {显示基地}
+        GOSUB {每秒更新}
+        RETURN
+
+    初始化分数: 70
+        LOCATE 0,23,0
+        COLOR 0
+        RETURN
+
+    更新分数:   80
+        CLS 1
+        LOCATE 6,23,0
+        PRINT "Score:",SCORE%
+        RETURN
+
+    每秒更新:   90
+        WHILE 1
+            K1$ = INKEY$
+            IF K1$ <> "" THEN K$ = K1$
+            SEC% = VAL(RIGHT$(TIME$,2))
+            IF SEC% <> SEC1% THEN SEC1% = SEC% : GOSUB {更新} : GOSUB {更新分数} : K$ = ""
+            IF ENEMY! < 0 THEN GameWorldType(FIX(RND*8),10) = 2 : ENEMY! = RND*20 ELSE ENEMY! = ENEMY! - RND*3
+            IF ASTEROID! < 0 THEN GameWorldType(FIX(RND*8),10) = 5 : ASTEROID! = RND*15 ELSE ASTEROID! = ASTEROID! - RND*3
+        WEND
+        RETURN
+
+    更新:   110
+        FOR X% = 0 TO 8
+            FOR Y% = 0 TO 10
+                CurrentType% = GameWorldType(X%,Y%)
+                IF CurrentType% = 3 THEN GOSUB {子弹逻辑}
+                IF CurrentType% = 4 THEN GOSUB {敌方子弹逻辑}
+                IF CurrentType% = 5 THEN GOSUB {陨石逻辑}
+                IF CurrentType% = 1 THEN GOSUB {玩家逻辑}
+                IF CurrentType% = 2 THEN GOSUB {敌人逻辑}
+                IF CurrentType% = 6 THEN GOSUB {爆炸逻辑}
+            NEXT Y%
+        NEXT X%
+
+        LINE (0,0)-(640,174),0,BF
+        FOR X% = 0 TO 8
+            FOR Y% = 0 TO 10
+                CurrentType% = GameWorldType(X%,Y%)
+                DX% = (X%+1)*64
+                DY% = 155-Y%*19
+                IF CurrentType% = 1 THEN GOSUB {显示玩家}
+                IF CurrentType% = 2 THEN GOSUB {显示敌人}
+                IF CurrentType% = 5 THEN GOSUB {显示陨石}
+                IF CurrentType% = 3 THEN GOSUB {显示子弹}
+                IF CurrentType% = 4 THEN GOSUB {显示敌方子弹}
+                IF CurrentType% = 6 THEN GOSUB {显示爆炸}
+            NEXT Y%
+        NEXT X%
+        RETURN
+
+    玩家逻辑:
+        主逻辑: 200
+            IF K$ = "a" AND X% > 0 THEN GOSUB {玩家向左移动}
+            IF K$ = "d" AND X% < 8 THEN GOSUB {玩家向右移动}
+            IF K$ = "w" THEN GOSUB {玩家发射子弹}
+            K$ = ""
+            RETURN
+
+        玩家向左移动:   210
+            XA% = X%
+            YA% = Y%
+            XB% = X%-1
+            YB% = Y%
+            GOSUB {移动}
+            X% = X%-1
+            RETURN
+
+        玩家向右移动:   230
+            XA% = X%
+            YA% = Y%
+            XB% = X%+1
+            YB% = Y%
+            GOSUB {移动}
+            X% = X%+1
+            RETURN
+
+        玩家发射子弹:   240
+            IF GameWorldType(X%,Y%+1) <> 0 AND GameWorldType(X%,Y%+1) <> 4 AND GameWorldType(X%,Y%+1) <> 6 THEN GameWorldType(X%,Y%+1) = 6 : GameWorldData(X,Y%+1) = 3 : RETURN
+            GameWorldType(X%,Y%+1) = 3
+            BEEP
+            RETURN
+
+    敌方逻辑:
+        主逻辑: 250
+            IF Y% > 0 THEN GOSUB {敌方移动}
+            IF Y% = 0 THEN GOSUB {结束游戏}
+            RETURN
+
+        敌方移动:   260
+            IF GameWorldType(X%,Y%-1) = 1 THEN GOSUB {结束游戏}
+            XA% = X%
+            YA% = Y%
+            XB% = X%
+            YB% = Y%-1
+            GOSUB {移动}
+            Y% = Y%-1
+            RETURN
+
+        陨石:   270
+            GOSUB {敌方逻辑}
+            RETURN
+
+        敌人:   280
+            GOSUB {敌方逻辑}
+            IF GameWorldData(X%,Y%) = 0 THEN GOSUB {敌人发射子弹} ELSE GameWorldData(X%,Y%) = GameWorldData(X%,Y%)-1
+            RETURN
+        
+        敌人发射子弹:   290
+            IF GameWorldType(X%,Y%-1) = 1 THEN BEEP : GOSUB {结束游戏}
+            IF GameWorldType(X%,Y%-1) <> 0 AND GameWorldType(X%,Y%-1) <> 6 THEN RETURN
+            GameWorldType(X%,Y%-1) = 4
+            BEEP
+            GameWorldData(X%,Y%) = FIX(RND*10)
+            RETURN
+
+    爆炸逻辑:   300
+        IF GameWorldData(X%,Y%) < 1 THEN GameWorldType(X%,Y%) = 0 ELSE GameWorldData(X%,Y%) = GameWorldData(X%,Y%) - 1
+        RETURN
+
+    子弹逻辑:
+        主逻辑: 310
+            GOSUB {子弹移动}
+            IF Y%+2 > 10 THEN RETURN
+            IF GameWorldType(X%,Y%+2) = 2 OR GameWorldType(X%,Y%+2) = 5 THEN CX% = X% : CY% = Y%+2 : GOSUB {子弹碰撞}
+            IF GameWorldType(X%,Y%+1) = 2 OR GameWorldType(X%,Y%+1) = 5 THEN CX% = X% : CY% = Y%+1 : GOSUB {子弹碰撞}
+            IF GameWorldType(X%,Y%-1) = 2 OR GameWorldType(X%,Y%-1) = 5 THEN CX% = X% : CY% = Y%-1 : GOSUB {子弹碰撞}
+            IF GameWorldType(X%,Y%+2) = 4 THEN GameWorldType(X%,Y%+2) = 0
+            IF GameWorldType(X%,Y%+1) = 4 THEN GameWorldType(X%,Y%+1) = 0
+            IF GameWorldType(X%,Y%-1) = 4 THEN GameWorldType(X%,Y%-1) = 0
+            RETURN
+
+        子弹碰撞:   330
+            IF GameWorldType(CX%,CY%) = 2 THEN SCORE% = SCORE%+10 ELSE SCORE% = SCORE%+5
+            XC% = X%
+            YC% = Y%
+            GOSUB {删除}
+            GameWorldType(CX%,CY%) = 6
+            GameWorldData(CX%,CY%) = 3
+            RETURN
+
+        子弹移动:   350
+            IF Y%+2 > 10 THEN XC% = X% : YC% = Y% : GOSUB {删除} : RETURN
+            XA% = X%
+            YA% = Y%
+            XB% = X%
+            YB% = Y%+2
+            GOSUB {移动}
+            Y% = Y%+2
+            RETURN
+
+    敌人子弹逻辑:
+        主逻辑: 370
+            IF Y%-2 < 0 THEN XC% = X% : YC% = Y% : GOSUB {删除} : RETURN
+            IF GameWorldType(X%,Y%-2) = 1 THEN CX% = X% : CY% = Y%-2 : GOSUB {结束游戏}
+            IF GameWorldType(X%,Y%-1) = 1 THEN CX% = X% : CY% = Y%-1 : GOSUB {结束游戏}
+            IF GameWorldType(X%,Y%+1) = 1 THEN CX% = X% : CY% = Y%+1 : GOSUB {结束游戏}
+            GOSUB {敌人子弹移动}
+            RETURN
+
+        敌人子弹移动:   380
+            XA% = X%
+            YA% = Y%
+            XB% = X%
+            YB% = Y%-2
+            GOSUB {移动}
+            Y% = Y%-2
+            RETURN
+
+    图形相关:
+        显示标题界面:   400
+            CIRCLE (200,70),50,7
+            CIRCLE (200,70),75,7
+            LINE (220,70)-(240,115),0,BF
+            LINE (220,70)-(240,115),7,B
+            LINE (220,70)-(240,115),7
+            LINE (220,94)-(220,106),0
+            LINE (240,85)-(240,102),0
+
+            LINE (275,30)-(425,40),7,B
+            LINE (300,30)-(320,100),7,B
+            LINE (301,40)-(319,40),0
+            LINE (300,31)-(300,39),0
+            LINE (320,31)-(320,39),0
+
+            LINE (340,50)-(360,50),7
+            LINE (430,50)-(450,50),7
+            LINE (430,50)-(300,130),7
+            LINE (450,50)-(320,130),7
+            LINE (360,50)-(395,72),7
+            LINE (340,50)-(385,78),7
+            LINE (300,130)-(320,130),7
+
+            LOCATE 20,15
+            PRINT "No. 1!"
+
+            LOCATE 32,17
+            PRINT "Press W to Start"
+
+            RETURN
+
+        显示基地:   440
+            LINE (0,175)-(640,200),7,BF
+            LINE (180,180)-(320,190),5,BF
+            CIRCLE (337,184),14,2
+            PAINT (337,184),2
+            CIRCLE (623,184),14,2
+            PAINT (623,184),2
+            LINE (337,177)-(623,191),1,BF
+            RETURN
+
+        在DX，DY显示玩家:   460
+            LINE (DX%,DY%+5)-(DX%+10,DY%+15),7
+            LINE (DX%,DY%+5)-(DX%-10,DY%+15),7
+            LINE (DX%+10,DY%+15)-(DX%+30,DY%+15),7
+            LINE (DX%-10,DY%+15)-(DX%-30,DY%+15),7
+            LINE (DX%,DY%-15)-(DX%+30,DY%+15),7
+            LINE (DX%,DY%-15)-(DX%-30,DY%+15),7
+            LINE (DX%+10,DY%+15)-(DX%+10,DY%-5),7
+            LINE (DX%-10,DY%+15)-(DX%-10,DY%-5),7
+            PAINT (DX%,DY%),7
+            LINE (DX%+10,DY%+15)-(DX%,DY%-15),5
+            LINE (DX%-10,DY%+15)-(DX%,DY%-15),5
+            LINE (DX%,DY%+5)-(DX%+10,DY%+15),5
+            LINE (DX%,DY%+5)-(DX%-10,DY%+15),5
+            PAINT (DX%,DY%),5
+            RETURN
+
+        在DX，DY显示敌人:   480
+            CIRCLE (DX%,DY%),10,5
+            IF DY% > 0 THEN PAINT (DX%,DY%),5
+            LINE (DX%+10,DY%)-(DX%+20,DY%-15),2
+            LINE (DX%-10,DY%)-(DX%-20,DY%-15),2
+            LINE (DX%+10,DY%)-(DX%+30,DY%-15),6
+            LINE (DX%-10,DY%)-(DX%-30,DY%-15),6
+            LINE (DX%+10,DY%)-(DX%+40,DY%-15),7
+            LINE (DX%-10,DY%)-(DX%-40,DY%-15),7
+            LINE (DX%+40,DY%-15)-(DX%,DY%+20),7
+            LINE (DX%-40,DY%-15)-(DX%,DY%+20),7
+            CIRCLE (DX%,DY%),11,7
+            IF DY%+15 > 0 THEN PAINT (DX%,DY%+15),7
+            CIRCLE (DX%,DY%),11,0
+            LINE (DX%,DY%+5)-(DX%,DY%+20),0
+            RETURN
+
+        在DX，DY显示子弹:   500
+            LINE (DX%+4,DY%+5)-(DX%-4,DY%-5),5,BF
+            CIRCLE (DX%,DY%+5),4,7
+            IF DY%+5 > 0 THEN PAINT (DX%,DY%+5),7
+            CIRCLE (DX%,DY%-5),4,7
+            IF DY%-5 > 0 THEN PAINT (DX%,DY%-5),7
+            RETURN
+
+        在DX，DY显示敌方子弹:   510
+            LINE (DX%+4,DY%+5)-(DX%-4,DY%-5),2,BF
+            CIRCLE (DX%,DY%+5),4,7
+            IF DY%+5 > 0 THEN PAINT (DX%,DY%+5),7
+            CIRCLE (DX%,DY%-5),4,7
+            IF DY%-5 > 0 THEN PAINT (DX%,DY%-5),7
+            RETURN
+
+        在DX，DY显示陨石:   520
+            CIRCLE (DX%,DY%-3),35,2
+            IF DY% > 0 THEN PAINT (DX%,DY%),2
+            CIRCLE (DX%,DY%),30,7
+            IF DY% > 0 THEN PAINT (DX%,DY%),7
+            CIRCLE (DX%-14,DY%-8),15,0
+            IF DY%-8 > 0 THEN PAINT (DX%-14,DY%-8),0
+            CIRCLE (DX%+12,DY%+6),10,0
+            RETURN
+
+        在DX，DY显示爆炸:   530
+            CIRCLE (DX%,DY%),35,2
+            IF DY% > 0 THEN PAINT (DX%,DY%),2
+            FOR I%=0 TO FIX(RND*10)
+                TX% = DX%+(RND*35)-17.5
+                TY% = DY%+(RND*35)-17.5
+                CIRCLE(TX%,TY%),RND*10,6
+                IF TY% > 0 THEN PAINT (TX%,TY%),6
+            NEXT I%
+            RETURN
+
+    结束游戏:   540
+        BEEP
+        CLS 3
+        CONSOLE ,,,0
+        LOCATE 0,0,1
+        PRINT "Game End"
+        PRINT "Score:",SCORE%
+        END
+
+    移动(将XA，YA移动至XB，YB(覆盖)):   550
+        TYPE% = GameWorldType(XA%,YA%)
+        INFO% = GameWorldData(XA%,YA%)
+        GameWorldType(XB%,YB%) = TYPE%
+        GameWorldData(XB%,YB%) = INFO%
+        XC% = XA%
+        YC% = YA%
+        GOSUB {删除}
+        RETURN
+
+    删除(将XC，YC删除): 560
+        GameWorldType(XC%,YC%) = 0
+        GameWorldData(XC%,YC%) = 0
+        RETURN
+
+
+N88 Basic:
+    Syntax:
+        In a program every command must begin with its line number (1-65529)
+        Upper case and lower case does not make a difference
+        If multiple commands in a single line or statement, separate them with colon (:)
+        Define a variable by first stating the variable followed by a equal then the value (e.g. X% = 1)
+        Indentations or any spaces more than 1 in length does now do anything (just use it for readability)
+
+        &H[Hex]
+
+    Commands:
+        CIRCLE (X Cord, Y Cord), [Radius], [Color]  //At (X Cord, Y Cord) draw a circle with a radius of Radius pixel and color pallete number Color (default 7)
+        CLS [1/2/3]   //Clear screen (1=word,2=graphics,3=both) (default 1)
+        PAINT (X Cord, Y Cord), [Color]   //Fill the area at X Cord, Y Cord with color pallete number Color (default 7)
+        PRINT [Stuff], [Stuff] ; [Stuff]  //Print Stuff, Stuff, Stuff
+        WRITE [Stuff], [Stuff] ; [Stuff]  //Basically print, without space between the Stuff's (theres more differeces)
+        GOTO Line   //Jump the command execution to the Line Line
+        GOSUB Line  //Go to a sub routine on the Line line
+        RETURN [Line]   //Return to where the sub routine is called (if no Line) OR go out of sub routine and goto Line line (both must require GOSUB)
+        BEEP [1/0]  //Beep once (without [1/0]) OR start beeping (1) AND stop beeping (0)
+        IF Statement1 THEN Statement2 [ELSE Statement3] //If Statement1 equals to 1 then do Statement2 [else do Statement3]
+        END //Ends the program
+        LOCATE [X TextCord], [Y TextCord], [Display Cursor] //Change the cursor location to X and Y TextCord if specified, and if Display Cursor is 1 the cursor with be displayed and vice versa (can be use alongside with print/write to print text on screen)
+        OUT Port, Byte  //Send Byte (0-255) to port Port (0-32767)  AFAIK 64 is the beeper but nothing else is known
+        LINE (X1 Cord, Y1 Cord)-(X2 Cord, Y2 Cord), [Color], [Type] //Draw line/s from X1,Y1 to X2,Y2 with color pallete Color. If no Type a straight line is drawn, if Type is B a box is drawn, if Type is BF a filled box is drawn
+        ERASE [Name]    //Delete the variable with the name Name
+        DIM Name(Size1, [Size ...]) //Define an array variable with the dimensions of Size1[, Size2, Size3...] and can be accessed with Name(Axis1[, Axis2, Axis3...]) and use syntax like normal variable
+        FIX(Float)  //Turns Float to integer (and floor it)
+        FOR:
+            FOR X = ... TO Y [STEP Step]
+            [FOR W TO T [STEP Step1]]
+            ...
+            NEXT X [, W]
+            //For X to Y with step Step (default 1) do ...
+        WHILE:
+            WHILE Statement
+            ...
+            WEND
+            //While Statement is 1 do ...
+        LEFT$(String, Num)RIGHT$(String, Num) //Return the leftmost/rightmost Num character from String
+        MID$(String, Num, [Num1]) //Return a part of the String starting from the Num'ed character (inclusive) and Num1 characters long if specified or till the end
+        CHR$(Num)   //Returns the string form of Num
+        VAL(String) //Returns the number form of String (if it represents a number) (supports multiple forms)
+
+    Hardware Ports:
+        50 = System Control ?
+        64 = Beeper ?
+
+        Experiment Result:
+            When OUT 50,(16,240-255) the screen goes black and the system restarts
+            Not happening again    When OUT 50,32 the text display only displays half the horizontal resolution with one column not displayed for each 2 columns
+            When OUT 64,(32-63,96-127) the system beeps until a command (not sure if all commands work for stopping it)
+
+    Color pallete:
+        0 - Black
+        1 - Blue
+        2 - Red
+        3 - Pink/Purple
+        4 - Green
+        5 - Cyan
+        6 - Yellow
+        7 - White
+
+    Variable:
+        X - A general variable named X
+        X$ - A string variable named X
+        X% - A integer variable named X
+
+        INKEY$ - A string variable of the key the user is pressing
+        TIME$ - A string variable of the current time in hh:mm:ss
+
+
+想法:
+    可以用dim定义多个2维阵列来进行逻辑然后用for来遍历
+    比如说一个5x5的阵列，阵列里的轴就是显示的轴
+    假如(3,2)是2并且2被定义为敌人，就在(3,2)在屏幕上代表的位置绘制敌人
+    再比如如果需要在敌人身上存储信息，就新建一个阵列并将两个的坐标保持一致
+
+    The play field will be split into 9 lanes with each lane having 64 px
+    like this:
+    32px|lane0|lane1|lane2|lane3|lane4|lane5|lane6|lane7|lane8|32px
+    so laneX middle will be 64+X*64 or well:
+        (X+1)*64
+
+    Each lane with be split into 11 verticle pieces with the center of the lowest piece will be at Y=155 called piece0
+    and the highest piece at Y=-35 called piece10
+    and each piece's center will have a space of 19 px
+    and each piece is counted from down to up
+    so to calculate the axis of pieceY:
+        155-Y*19
+
+    The game should update for once a second
+
+    Code for representing objects:
+        0 - None
+        1 - Player
+        2 - Enemy
+        3 - Player Bullet
+        4 - Enemy Bullet
+        5 - Asteroid
+        6 - Explosion
+
+    Explosion should last for 3 seconds or until something passes through it,
+    each second there should be a new explosion rendered on top of it to animate,
+    the remaining life should be stored in GameWorldData
+
+    Score should be displayed at the left bottom of the screen
+
+    If the bullet of enemy and friendly touches, friendly will override.
+
+    Enemy speed should be 1 piece down per second
+    and bullt speed should be 2 piece per second
+
+    Objects should check up and down one piece for collide
+
+    Time until enemy shoot is stored in its data
+
+    todo:
